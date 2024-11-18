@@ -1,0 +1,12 @@
+services:
+ spring-con:
+  image: sambit1996/docker
+  ports:
+    - "1234:9090"
+  container_name: spring-con
+  networks:
+      - demo
+
+
+networks:
+  demo:
