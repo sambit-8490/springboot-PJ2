@@ -1,6 +1,6 @@
 services:
  spring-con:
-  image: sambit1996/docker
+  image: sambit1996/docker:spring
   ports:
     - "1234:9090"
   container_name: spring-con
