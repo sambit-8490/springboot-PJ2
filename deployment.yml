@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: web
-        image: sambit1996/docker:spring
+        image: sambit1996/docker:spring1
         ports:
         - containerPort: 9090
