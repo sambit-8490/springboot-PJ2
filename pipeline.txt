@@ -1,0 +1,49 @@
+pipeline {
+    agent any 
+    environment {
+        IMAGE_NAME = 'sambit1996/docker:spring2'
+    }
+    
+    stages {
+        stage ('git clone') {
+            steps {
+                sh 'rm -rf *'
+                sh 'git clone https://github.com/sambit-8490/springboot-PJ2.git'
+            }
+        }  
+        stage ('check') {
+            steps {
+                sh 'docker images -q ${IMAGE_NAME} | docker rmi -f ${IMAGE_NAME}'
+            }
+        }
+        stage ('build') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME} -f springboot-PJ2/Dockerfile springboot-PJ2/'
+            }
+        }
+        stage ('login and push') {
+            steps {
+                withCredentials([string(credentialsId: 'dockerpw', variable: 'dockerpw')]) {
+                sh 'docker login -u sambit1996 -p ${dockerpw}'
+                    
+                }
+                sh 'docker push ${IMAGE_NAME}'
+            }
+        }
+        stage ('kubernetes') {
+             steps {
+                script {
+                    kubernetesDeploy (configs: 'springboot-PJ2/deployment.yml', kubeconfigId: 'kubernetesconfig')
+                 }
+            }
+        }   
+            
+    }
+    post {
+        always {
+            mail to: 'sambitkumarchaudhury786@gmail.com',
+            subject: "successfully deploy Spring application ${BUILD_ID}",
+            body: "this is jenkins url ${BUILD_URL}"
+        }
+    }
+}
