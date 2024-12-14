@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: spring
-        image: sambit1996/docker
+        image: sambit1996/spring:v1
         ports:
         - containerPort: 9090
 
@@ -38,7 +38,7 @@ spec:
       # Optional field
       # By default and for convenience, the Kubernetes control plane
       # will allocate a port from a range (default: 30000-32767)
-      nodePort: 30016
+      nodePort: 30017
 ---
 
 
