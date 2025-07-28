@@ -1,0 +1,178 @@
+# 🚀 Kubernetes Setup with Minikube, Jenkins Pipeline & Ingress (Ubuntu)
+
+## 📌 Overview
+
+This guide walks through setting up Kubernetes on Ubuntu using Minikube for running Jenkins pipelines and deploying applications with Ingress.
+
+---
+
+## ✅ Prerequisites
+
+* Ubuntu system
+* Minikube and `kubectl` installed
+* Jenkins installed (running as `jenkins` user)
+* Pipeline-enabled Jenkins project
+* Git, Docker installed
+
+---
+
+## ✅ Step 1: Start Minikube
+
+```bash
+minikube start
+```
+
+---
+
+## 🔐 Step 2: Fix Kubernetes Config Permissions for Jenkins
+
+Minikube stores its kubeconfig under the developer user's home. To make this accessible to Jenkins:
+
+```bash
+cd ~/.kube
+sudo chown jenkins config
+```
+
+---
+
+## 🔑 Step 3: Encode Certs for Secure Access
+
+Run the following commands as the `developer` user:
+
+```bash
+# Base64 encode the necessary certificates
+cat ~/.minikube/ca.crt | base64 -w 0
+cat ~/.minikube/profiles/minikube/client.crt | base64 -w 0
+cat ~/.minikube/profiles/minikube/client.key | base64 -w 0
+```
+
+Copy the output of each command.
+
+### Update `~/.kube/config`
+
+Replace these lines:
+
+**Before:**
+
+```yaml
+certificate-authority: /home/developer/.minikube/ca.crt
+client-certificate: /home/developer/.minikube/profiles/minikube/client.crt
+client-key: /home/developer/.minikube/profiles/minikube/client.key
+```
+
+**After:**
+
+```yaml
+certificate-authority-data: <base64-encoded-ca.crt>
+client-certificate-data: <base64-encoded-client.crt>
+client-key-data: <base64-encoded-client.key>
+```
+
+---
+
+## 🤖 Jenkins Pipeline Example
+
+```groovy
+pipeline {
+    agent any
+    environment {
+        KUBECONFIG = '/home/developer/.kube/config'
+    }
+
+    stages {
+        stage('Git Clone') {
+            steps {
+                git 'https://github.com/sambit-8490/springboot-PJ2.git'
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh 'kubectl apply -f ./deployment.yml'
+            }
+        }
+    }
+}
+```
+
+---
+
+## 🌐 Enable Ingress in Minikube
+
+```bash
+minikube addons enable ingress
+```
+
+Verify:
+
+```bash
+kubectl get pods -n kube-system
+```
+
+---
+
+## 📄 Sample `ingress.yml`
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-host
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: /bar
+        backend:
+          service:
+            name: my-web-s1
+            port:
+              number: 9090
+```
+
+---
+
+## 🗜️ Map Domain Locally
+
+1. Get Minikube IP:
+
+   ```bash
+   minikube ip
+   ```
+
+   *e.g., 192.168.49.2*
+
+2. Edit `/etc/hosts`:
+
+   ```bash
+   sudo nano /etc/hosts
+   ```
+
+   Add this line:
+
+   ```
+   192.168.49.2   foo.bar.com
+   ```
+
+3. Apply ingress:
+
+   ```bash
+   kubectl apply -f ingress.yml
+   ```
+
+4. Open browser:
+
+   ```
+   http://foo.bar.com/bar
+   ```
+
+---
+
+## ✅ Summary
+
+You now have:
+
+* Minikube running on Ubuntu
+* Jenkins using `kubectl` to deploy apps
+* Ingress routing requests using a custom domain

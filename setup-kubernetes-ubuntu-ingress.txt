@@ -51,3 +51,34 @@ pipeline {
 }
 
 
+--------------------------------------------------------------------------------------------------------
+How to enable Ingress in Minikube and deploy using Ingress in your Jenkins pipeline setup.
+—------------------------------------------------------------------------------------------
+Enable Ingress in Minikube :- minikube addons enable ingress
+Then verify it's running: kubectl get pods -n kube-system
+Create Your Deployment & Service & ingress file
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-host
+spec:
+  rules:
+  - host: foo.bar.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: /bar
+        backend:
+          service:
+            name: my-web-s1
+            port:
+              number: 9090
+NEXT STEP - The domain foo.bar.com in your Ingress is a dummy hostname used just for testing. To make it work locally with Minikube, you must map it manually
+
+ how to use foo.bar.com locally:
+Get Minikube IP : minikube ip
+Edit /etc/hosts: add inside file
+sudo nano /etc/hosts (192.168.49.2(minikube ip)  foo.bar.com)
+SAVE.
+Last - kubectl apply -f ingress.yml
+Check Browser : foo.bar.com

@@ -52,7 +52,7 @@ spec:
     http:
       paths:
       - pathType: Prefix
-        path: "/bar"
+        path: "/"
         backend:
           service:
             name: my-web-s1
