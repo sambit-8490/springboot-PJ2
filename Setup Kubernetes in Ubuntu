@@ -1,0 +1,53 @@
+HOW TO SET KUBERNETES IN UBUNTU SO JENKINS PIPELINE WORK AND DEPLOY APPLICATION
+—------------------------------------------------------------------------------------------
+After install minikube and kubectl start minikube
+
+Then check config file in local (/home/developer/.kube/config)
+1. Permissions on .kube/config
+sudo chown jenkins config
+
+Then need to edit config this line inside file 
+
+Run the following commands as developer:
+
+# Base64 encode the files
+cat ~/.minikube/ca.crt | base64 -w 0
+cat ~/.minikube/profiles/minikube/client.crt | base64 -w 0
+cat ~/.minikube/profiles/minikube/client.key | base64 -w 0
+
+
+
+BEFORE—--
+certificate-authority: /home/developer/.minikube/ca.crt
+client-certificate: /home/developer/.minikube/profiles/minikube/client.crt
+client-key: /home/developer/.minikube/profiles/minikube/client.key
+
+
+AFTER—--
+Certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0……………….
+Client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0……………….
+Client-key-data:  LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0……………….
+
+
+pipeline {
+    agent any 
+    environment {
+        KUBECONFIG = '/home/developer/.kube/config'
+    }
+    
+    stages {
+        stage ('git clone') {
+            steps {
+                git 'https://github.com/sambit-8490/springboot-PJ2.git'
+            }
+        }
+         stage ('kube') {
+            steps {
+               sh 'kubectl apply -f ./deployment.yml'
+            }
+        }
+        
+    }
+}
+
+
